@@ -46,21 +46,32 @@ def send_ipp_status() -> None:
 
 
 def poll_snmp() -> None:
-    iterator = getCmd(
-        SnmpEngine(),
-        CommunityData("public"),
-        UdpTransportTarget((SERVER_IP, 161)),
-        ContextData(),
-        ObjectType(ObjectIdentity("1.3.6.1.2.1.1.1.0")),
-    )
-    error_indication, error_status, _, var_binds = next(iterator)
+    try:
+        iterator = getCmd(
+            SnmpEngine(),
+            CommunityData("public"),
+            UdpTransportTarget((SERVER_IP, 161), timeout=2, retries=1),
+            ContextData(),
+            ObjectType(ObjectIdentity("1.3.6.1.2.1.1.1.0")),
+        )
+        response = next(iterator)
+    except StopIteration:
+        json_log("snmp_error", error="no_response")
+        return
+    except Exception as exc:  # noqa: BLE001
+        json_log("snmp_error", error=str(exc))
+        return
+
+    error_indication, error_status, _, var_binds = response
     if error_indication:
         json_log("snmp_error", error=str(error_indication))
-    elif error_status:
+        return
+    if error_status:
         json_log("snmp_error", error=str(error_status.prettyPrint()))
-    else:
-        for var_bind in var_binds:
-            json_log("snmp_response", value=" = ".join([x.prettyPrint() for x in var_bind]))
+        return
+
+    for var_bind in var_binds:
+        json_log("snmp_response", value=" = ".join([x.prettyPrint() for x in var_bind]))
 
 
 def main() -> None:
