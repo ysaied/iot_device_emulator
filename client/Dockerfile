@@ -34,7 +34,7 @@ COPY . /opt/iot/client
 COPY configs /opt/iot/configs
 
 RUN find /opt/iot/client -type f -name "*.sh" -exec chmod +x {} \; && \
-    find /opt/iot/client/device-scripts -type f -name "*.py" -exec chmod +x {} \;
+    find /opt/iot/client/device_scripts -type f -name "*.py" -exec chmod +x {} \;
 
 ENV PYTHONPATH=/opt/iot
 

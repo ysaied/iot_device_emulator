@@ -240,7 +240,7 @@ def emit(name, value):
     print(f"export {name}={shlex.quote(str(value))}")
 
 emit("PERSONA_DISPLAY_NAME", persona.get("display_name", device_type))
-emit("PERSONA_SCRIPT", persona.get("script", "device-scripts/heartbeat.py"))
+emit("PERSONA_SCRIPT", persona.get("script", "device_scripts/heartbeat.py"))
 emit("PERSONA_VENDOR_OUI", persona.get("vendor_oui", "00:11:22"))
 emit("FIRMWARE_VERSION", persona.get("firmware_version", "0.0.0"))
 emit("PERSONA_PROTOCOL", persona.get("protocol", "UNKNOWN"))
@@ -387,7 +387,7 @@ PY
 
 pairing_probe
 
-SCRIPT_PATH="/opt/iot/client/device-scripts/${PERSONA_SCRIPT}"
+SCRIPT_PATH="/opt/iot/client/device_scripts/${PERSONA_SCRIPT}"
 if [[ ! -x "${SCRIPT_PATH}" ]]; then
   log_json "script_missing" path="${SCRIPT_PATH}"
   exit 1
