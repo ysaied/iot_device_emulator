@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import time
 
 import paho.mqtt.client as mqtt
@@ -10,11 +11,14 @@ from pymodbus.client import ModbusTcpClient
 from .common import DEVICE_ID, FIRMWARE_VERSION, SERVER_IP, json_log, jitter, malicious_ping
 
 
+MODBUS_PORT = int(os.environ.get("MODBUS_PORT", "1502"))
+
+
 def main() -> None:
     mqtt_client = mqtt.Client(client_id=f"{DEVICE_ID}-sensor")
     mqtt_client.connect(SERVER_IP, 1883, keepalive=60)
     mqtt_client.loop_start()
-    modbus_client = ModbusTcpClient(SERVER_IP, port=502)
+    modbus_client = ModbusTcpClient(SERVER_IP, port=MODBUS_PORT)
     modbus_client.connect()
     try:
         while True:

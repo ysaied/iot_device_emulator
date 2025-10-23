@@ -16,6 +16,7 @@ Lightweight laboratory to simulate IT/IoT/OT endpoints with persona-specific net
   ```bash
   docker network create --subnet 192.168.50.0/24 server_net || true
   docker run --name iot-server --network server_net --ip 192.168.50.10 \
+    -e MODBUS_PORT=1502 \
     -v $(pwd)/data:/data -d iot-server
   ```
 - **Start a client persona**
@@ -25,6 +26,7 @@ Lightweight laboratory to simulate IT/IoT/OT endpoints with persona-specific net
     -e DEVICE_TYPE=CAMERA_RTSP \
     -e DEVICE_ID=cam01 \
     -e SERVER_IP=192.168.50.10 \
+    -e MODBUS_PORT=1502 \
     iot-client
   ```
 - **Verify DHCP & mapping**

@@ -2,12 +2,16 @@
 from __future__ import annotations
 
 import json
+import os
 import time
 
 import requests
 from pymodbus.client import ModbusTcpClient
 
 from .common import DEVICE_ID, FIRMWARE_VERSION, SERVER_IP, json_log, jitter, malicious_ping
+
+
+MODBUS_PORT = int(os.environ.get("MODBUS_PORT", "1502"))
 
 
 def http_query() -> None:
@@ -26,7 +30,7 @@ def modbus_cycle(client: ModbusTcpClient) -> None:
 
 
 def main() -> None:
-    client = ModbusTcpClient(SERVER_IP, port=502)
+    client = ModbusTcpClient(SERVER_IP, port=MODBUS_PORT)
     client.connect()
     try:
         while True:
