@@ -126,6 +126,86 @@ prefer_source_ip() {
   fi
 }
 
+read_dhcp_gateway() {
+  python3 - <<'PY' || true
+import json
+import re
+from pathlib import Path
+
+leases_path = Path("/var/lib/dhcp/dhclient.leases")
+if not leases_path.exists():
+    raise SystemExit
+
+pattern = re.compile(r"option routers (.+);")
+gateway = None
+try:
+    for line in leases_path.read_text().splitlines():
+        line = line.strip()
+        match = pattern.match(line)
+        if match:
+            routers = [item.strip() for item in match.group(1).split(",") if item.strip()]
+            if routers:
+                gateway = routers[0]
+except Exception:
+    gateway = None
+
+if gateway:
+    print(gateway)
+PY
+}
+
+correct_gateway() {
+  local preferred_ip="${1:-}"
+  local current_route gateway metric
+  current_route=$(ip -o route show default dev eth0 | head -n1 || true)
+  if [[ -z "${current_route}" ]]; then
+    return
+  fi
+
+  gateway=$(awk '{for(i=1;i<=NF;i++){if($i=="via"){print $(i+1); exit}}}' <<<"${current_route}")
+  metric=$(awk '{for(i=1;i<=NF;i++){if($i=="metric"){print $(i+1); exit}}}' <<<"${current_route}")
+
+  if [[ -z "${gateway}" ]]; then
+    return
+  fi
+
+  if python3 - "$gateway" <<'PY'; then
+import ipaddress
+import sys
+
+gateway = sys.argv[1]
+try:
+    ip = ipaddress.ip_address(gateway)
+except ValueError:
+    raise SystemExit(1)
+
+private_block = ipaddress.ip_network("172.16.0.0/12")
+if ip in private_block:
+    raise SystemExit(0)
+raise SystemExit(1)
+PY
+  then
+    local dhcp_gateway
+    dhcp_gateway="$(read_dhcp_gateway || true)"
+    if [[ -z "${dhcp_gateway}" || "${dhcp_gateway}" == "${gateway}" ]]; then
+      return
+    fi
+    if [[ -n "${metric}" ]]; then
+      if ip route replace default via "${dhcp_gateway}" dev eth0 src "${preferred_ip:-$dhcp_gateway}" metric "${metric}"; then
+        log_json "gateway_corrected" gateway="${dhcp_gateway}" metric="${metric}"
+      else
+        log_json "gateway_correct_error" gateway="${dhcp_gateway}" metric="${metric}"
+      fi
+    else
+      if ip route replace default via "${dhcp_gateway}" dev eth0 src "${preferred_ip:-$dhcp_gateway}"; then
+        log_json "gateway_corrected" gateway="${dhcp_gateway}"
+      else
+        log_json "gateway_correct_error" gateway="${dhcp_gateway}"
+      fi
+    fi
+  fi
+}
+
 : "${DEVICE_TYPE:=CAMERA_RTSP}"
 : "${DEVICE_ID:=device-$(date +%s)}"
 : "${SERVER_IP:=127.0.0.1}"
@@ -231,6 +311,7 @@ if [[ "${ENABLE_DHCLIENT}" == "true" ]]; then
     if [[ -n "${DHCP_IP}" ]]; then
       PREFERRED_SOURCE_IP="${DHCP_IP}"
       prefer_source_ip "${DHCP_IP}"
+      correct_gateway "${DHCP_IP}"
     else
       log_json "preferred_ip_error" reason="dhcp_ip_not_detected"
     fi
@@ -320,6 +401,46 @@ cleanup() {
 trap cleanup EXIT
 
 export DEVICE_TYPE DEVICE_ID SERVER_IP FIRMWARE_VERSION VULNERABILITY_PROFILE MALICIOUS_MODE PAYLOAD_TEMPLATE
+
+server_is_reachable() {
+  if [[ -z "${SERVER_IP}" ]]; then
+    return 0
+  fi
+  if ping -c1 -W2 "${SERVER_IP}" >/dev/null 2>&1; then
+    return 0
+  fi
+  if python3 - "$SERVER_IP" <<'PY'; then
+    return 0
+  fi
+  return 1
+import socket
+import sys
+
+server = sys.argv[1]
+ports = [9300, 443, 80]
+for port in ports:
+    try:
+        with socket.create_connection((server, port), timeout=3):
+            sys.exit(0)
+    except OSError:
+        continue
+sys.exit(1)
+PY
+}
+
+wait_for_server() {
+  local delay=30
+  while true; do
+    if server_is_reachable; then
+      log_json "server_reachable" server_ip="${SERVER_IP}"
+      break
+    fi
+    log_json "server_unreachable" server_ip="${SERVER_IP}" retry_in_sec="${delay}"
+    sleep "${delay}"
+  done
+}
+
+wait_for_server
 
 if [[ -n "${AUTOROTATE:-}" ]]; then
   log_json "autorotate_enabled" interval="${AUTOROTATE}"
