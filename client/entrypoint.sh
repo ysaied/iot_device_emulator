@@ -31,6 +31,101 @@ print(json.dumps(payload), flush=True)
 PY
 }
 
+PREFERRED_SOURCE_IP=""
+
+detect_preferred_ip() {
+  python3 - <<'PY'
+import ipaddress
+import json
+import subprocess
+import sys
+
+try:
+    result = subprocess.check_output(
+        ["ip", "-j", "-4", "addr", "show", "dev", "eth0"], text=True
+    )
+except Exception:
+    sys.exit()
+
+try:
+    data = json.loads(result)
+except json.JSONDecodeError:
+    sys.exit()
+
+addr_info = []
+if data:
+    addr_info = data[0].get("addr_info", [])
+
+preferred = None
+fallback = None
+for entry in addr_info:
+    ip = entry.get("local")
+    if not ip:
+        continue
+    if entry.get("dynamic"):
+        preferred = ip
+        break
+    if fallback is None:
+        fallback = ip
+
+if preferred is None:
+    private_block = ipaddress.ip_network("172.16.0.0/12")
+    for entry in addr_info:
+        ip = entry.get("local")
+        if not ip:
+            continue
+        try:
+            ip_obj = ipaddress.ip_address(ip)
+        except ValueError:
+            continue
+        if ip_obj not in private_block:
+            preferred = ip
+            break
+
+if preferred is None:
+    preferred = fallback
+
+if preferred:
+    print(preferred)
+PY
+}
+
+prefer_source_ip() {
+  local preferred_ip="$1"
+  if [[ -z "${preferred_ip}" ]]; then
+    return
+  fi
+
+  local default_route gateway metric
+  default_route=$(ip -o route show default dev eth0 | head -n1 || true)
+  if [[ -z "${default_route}" ]]; then
+    log_json "preferred_ip_error" reason="no_default_route" ip="${preferred_ip}"
+    return
+  fi
+
+  gateway=$(awk '{for(i=1;i<=NF;i++){if($i=="via"){print $(i+1); exit}}}' <<<"${default_route}")
+  if [[ -z "${gateway}" ]]; then
+    log_json "preferred_ip_error" reason="no_gateway" ip="${preferred_ip}"
+    return
+  fi
+
+  metric=$(awk '{for(i=1;i<=NF;i++){if($i=="metric"){print $(i+1); exit}}}' <<<"${default_route}")
+
+  if [[ -n "${metric}" ]]; then
+    if ip route replace default via "${gateway}" dev eth0 src "${preferred_ip}" metric "${metric}"; then
+      log_json "preferred_ip" ip="${preferred_ip}" gateway="${gateway}" metric="${metric}"
+    else
+      log_json "preferred_ip_error" reason="route_replace_failed" ip="${preferred_ip}" gateway="${gateway}" metric="${metric}"
+    fi
+  else
+    if ip route replace default via "${gateway}" dev eth0 src "${preferred_ip}"; then
+      log_json "preferred_ip" ip="${preferred_ip}" gateway="${gateway}"
+    else
+      log_json "preferred_ip_error" reason="route_replace_failed" ip="${preferred_ip}" gateway="${gateway}"
+    fi
+  fi
+}
+
 : "${DEVICE_TYPE:=CAMERA_RTSP}"
 : "${DEVICE_ID:=device-$(date +%s)}"
 : "${SERVER_IP:=127.0.0.1}"
@@ -132,6 +227,13 @@ if [[ "${ENABLE_DHCLIENT}" == "true" ]]; then
     log_json "dhcp_conf_rendered"
     dhclient -v -1 eth0 || log_json "dhcp_error" reason="dhclient_failed"
     ip -4 addr show eth0
+    DHCP_IP="$(detect_preferred_ip)"
+    if [[ -n "${DHCP_IP}" ]]; then
+      PREFERRED_SOURCE_IP="${DHCP_IP}"
+      prefer_source_ip "${DHCP_IP}"
+    else
+      log_json "preferred_ip_error" reason="dhcp_ip_not_detected"
+    fi
   else
     log_json "dhcp_conf_error"
   fi
@@ -158,7 +260,16 @@ if [[ -n "${HOSTNAME_MAP:-}" ]]; then
 fi
 
 get_ip_address() {
-  ip -o -4 addr show eth0 | awk '{print $4}' | cut -d/ -f1 | head -n1
+  if [[ -n "${PREFERRED_SOURCE_IP}" ]]; then
+    echo "${PREFERRED_SOURCE_IP}"
+    return
+  fi
+  local detected
+  detected="$(detect_preferred_ip || true)"
+  if [[ -n "${detected}" ]]; then
+    PREFERRED_SOURCE_IP="${detected}"
+    echo "${detected}"
+  fi
 }
 
 DEVICE_IP="$(get_ip_address)"
