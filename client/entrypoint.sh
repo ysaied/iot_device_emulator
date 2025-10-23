@@ -169,7 +169,7 @@ correct_gateway() {
     return
   fi
 
-  if python3 - "$gateway" <<'PY'; then
+  if python3 - "$gateway" <<'PY'
 import ipaddress
 import sys
 
@@ -409,10 +409,7 @@ server_is_reachable() {
   if ping -c1 -W2 "${SERVER_IP}" >/dev/null 2>&1; then
     return 0
   fi
-  if python3 - "$SERVER_IP" <<'PY'; then
-    return 0
-  fi
-  return 1
+  if python3 - "$SERVER_IP" <<'PY'
 import socket
 import sys
 
@@ -426,6 +423,10 @@ for port in ports:
         continue
 sys.exit(1)
 PY
+  then
+    return 0
+  fi
+  return 1
 }
 
 wait_for_server() {
