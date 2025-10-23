@@ -38,9 +38,9 @@ PY
 : "${ENABLE_BROADCAST:=true}"
 : "${ENABLE_PAIRING:=true}"
 : "${DISCOVERY_INTENSITY:=low}"
-: "${DHCP_TEMPLATE_PATH:=/opt/iot/client/configs/dhclient.jinja}"
+: "${DHCP_TEMPLATE_PATH:=/opt/iot/configs/dhclient.jinja}"
 : "${DHCP_TEMPLATE_DIR:=/opt/iot/client/dhclient-templates}"
-: "${HOSTS_TEMPLATE_PATH:=/opt/iot/client/configs/hosts_map.template}"
+: "${HOSTS_TEMPLATE_PATH:=/opt/iot/configs/hosts_map.template}"
 : "${SAFE_MODE:=false}"
 
 PERSONA_EXPORTS=$(python3 - <<'PY' "${DEVICE_TYPE}"

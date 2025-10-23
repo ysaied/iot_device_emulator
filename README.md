@@ -6,11 +6,8 @@ Lightweight laboratory to simulate IT/IoT/OT endpoints with persona-specific net
 - **Prerequisites**: Linux host recommended, Docker Engine 20+, ability to grant containers `--cap-add=NET_ADMIN`, and multicast-friendly networking (bridge or macvlan). macOS users should avoid macvlan restrictions or run inside a Linux VM.
 - **Build images**
   ```bash
-  cd server
-  docker build -t iot-server .
-  cd ../client
-  docker build -t iot-client .
-  cd ..
+  docker build -t iot-server ./server
+  docker build -t iot-client ./client
   ```
 - **Launch the server**
   ```bash
