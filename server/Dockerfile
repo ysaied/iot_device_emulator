@@ -14,14 +14,14 @@ RUN apt-get update && \
 
 WORKDIR /opt/iot/server
 
-COPY server/requirements.txt /tmp/requirements.txt
+COPY requirements.txt /tmp/requirements.txt
 RUN python -m pip install --upgrade pip && \
     pip install --no-cache-dir -r /tmp/requirements.txt
 
-COPY server /opt/iot/server
-COPY server/configs/mosquitto.conf /etc/mosquitto/mosquitto.conf
-COPY server/configs/nginx.conf /etc/nginx/nginx.conf
-COPY server/configs/snmpd.conf /etc/snmp/snmpd.conf
+COPY . /opt/iot/server
+COPY configs/mosquitto.conf /etc/mosquitto/mosquitto.conf
+COPY configs/nginx.conf /etc/nginx/nginx.conf
+COPY configs/snmpd.conf /etc/snmp/snmpd.conf
 
 RUN mkdir -p /data/logs && mkdir -p /run/supervisor
 RUN openssl req -x509 -nodes -days 365 -subj "/CN=iot-server" \
