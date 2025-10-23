@@ -1,0 +1,13 @@
+{
+  "name": "ip_phone_sip",
+  "protocols": [
+    "SIP",
+    "RTP"
+  ],
+  "payload": {
+    "call_id": "{uuid}",
+    "extension": "{device_id}",
+    "firmware": "{firmware_version}",
+    "registration_interval": 3600
+  }
+}

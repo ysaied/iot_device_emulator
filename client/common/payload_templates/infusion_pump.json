@@ -1,0 +1,12 @@
+{
+  "name": "infusion_pump",
+  "protocols": [
+    "MQTT",
+    "SNMP"
+  ],
+  "payload": {
+    "rate_ml_hr": "{randfloat:2.0-40.0}",
+    "volume_remaining_ml": "{randfloat:10.0-500.0}",
+    "firmware": "{firmware_version}"
+  }
+}

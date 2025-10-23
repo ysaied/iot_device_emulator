@@ -1,0 +1,11 @@
+{
+  "name": "profinet_light",
+  "protocols": [
+    "Profinet"
+  ],
+  "payload": {
+    "station_name": "pnet-{device_id}",
+    "status": "{choice:ready,standby}",
+    "firmware": "{firmware_version}"
+  }
+}

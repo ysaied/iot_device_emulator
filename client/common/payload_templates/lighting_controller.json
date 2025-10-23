@@ -1,0 +1,15 @@
+{
+  "name": "lighting_controller",
+  "protocols": [
+    "MQTT",
+    "CoAP"
+  ],
+  "payload": {
+    "groups": [
+      "zone1",
+      "zone2"
+    ],
+    "firmware": "{firmware_version}",
+    "scene": "{choice:day,eve,night}"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "plc_modbus",
+  "protocols": [
+    "ModbusTCP"
+  ],
+  "payload": {
+    "registers": {
+      "40001": "{randint:0-1}",
+      "40002": "{randint:0-4095}",
+      "40003": "{randint:0-4095}"
+    },
+    "firmware": "{firmware_version}"
+  }
+}

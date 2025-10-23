@@ -1,0 +1,17 @@
+{
+  "name": "camera_rtsp",
+  "protocols": [
+    "RTSP",
+    "ONVIF",
+    "HTTP"
+  ],
+  "payload": {
+    "stream_id": "{device_id}",
+    "firmware": "{firmware_version}",
+    "frame_interval_ms": 100,
+    "diagnostics": {
+      "uptime_s": "{uptime}",
+      "bitrate_kbps": 512
+    }
+  }
+}

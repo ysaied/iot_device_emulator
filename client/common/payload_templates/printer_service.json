@@ -1,0 +1,16 @@
+{
+  "name": "printer_service",
+  "protocols": [
+    "IPP",
+    "SNMP"
+  ],
+  "payload": {
+    "job_id": "{device_id}-{seq}",
+    "firmware": "{firmware_version}",
+    "status": "ready",
+    "metrics": {
+      "pages_per_minute": 18,
+      "toner_level": "{randint:10-95}"
+    }
+  }
+}

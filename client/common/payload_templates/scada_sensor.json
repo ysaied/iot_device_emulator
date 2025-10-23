@@ -1,0 +1,12 @@
+{
+  "name": "scada_sensor",
+  "protocols": [
+    "MQTT",
+    "ModbusTCP"
+  ],
+  "payload": {
+    "light_lux": "{randfloat:100.0-900.0}",
+    "vibration": "{randfloat:0.1-1.5}",
+    "firmware": "{firmware_version}"
+  }
+}
