@@ -1,0 +1,11 @@
+{
+  "name": "ecg_mqtt",
+  "protocols": [
+    "MQTT"
+  ],
+  "payload": {
+    "waveform": "{waveform:sinus}",
+    "firmware": "{firmware_version}",
+    "battery_pct": "{randint:35-100}"
+  }
+}

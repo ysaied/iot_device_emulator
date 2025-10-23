@@ -1,0 +1,13 @@
+{
+  "name": "nvr_sim",
+  "protocols": [
+    "RTSP",
+    "SMB"
+  ],
+  "payload": {
+    "channels": 8,
+    "firmware": "{firmware_version}",
+    "recording": "{choice:continuous,motion}",
+    "storage_gb": 1024
+  }
+}

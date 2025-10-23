@@ -1,0 +1,15 @@
+{
+  "name": "hmi_panel",
+  "protocols": [
+    "HTTP",
+    "ModbusTCP"
+  ],
+  "payload": {
+    "active_screen": "{choice:overview,alarms,manual}",
+    "commands": [
+      "read 40002",
+      "write 40005"
+    ],
+    "firmware": "{firmware_version}"
+  }
+}

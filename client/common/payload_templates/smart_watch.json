@@ -1,0 +1,12 @@
+{
+  "name": "smart_watch",
+  "protocols": [
+    "HTTPS",
+    "MQTT"
+  ],
+  "payload": {
+    "heart_rate": "{randint:55-120}",
+    "steps": "{randint:0-15000}",
+    "firmware": "{firmware_version}"
+  }
+}

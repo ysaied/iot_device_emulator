@@ -1,0 +1,14 @@
+{
+  "name": "bacnet_device",
+  "protocols": [
+    "BACnet"
+  ],
+  "payload": {
+    "device_instance": "{randint:1000-9999}",
+    "objects": [
+      "analogInput1",
+      "binaryOutput0"
+    ],
+    "firmware": "{firmware_version}"
+  }
+}

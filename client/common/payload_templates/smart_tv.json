@@ -1,0 +1,16 @@
+{
+  "name": "smart_tv",
+  "protocols": [
+    "SSDP",
+    "HTTPS"
+  ],
+  "payload": {
+    "app": "streamhub",
+    "firmware": "{firmware_version}",
+    "requests": [
+      "GET /api/guide",
+      "POST /api/metrics"
+    ],
+    "tls_profile": "{tls_profile}"
+  }
+}

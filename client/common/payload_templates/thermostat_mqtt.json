@@ -1,0 +1,12 @@
+{
+  "name": "thermostat_mqtt",
+  "protocols": [
+    "MQTT"
+  ],
+  "payload": {
+    "temperature_c": "{randfloat:18.0-27.5}",
+    "humidity_pct": "{randfloat:30.0-55.0}",
+    "target_c": 22.0,
+    "firmware": "{firmware_version}"
+  }
+}

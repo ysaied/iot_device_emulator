@@ -1,0 +1,8 @@
+{
+  "Name": "IOT Orthanc Stub",
+  "StorageDirectory": "/data/dicom",
+  "DicomAet": "IOTORTHANC",
+  "DicomPort": 104,
+  "HttpPort": 8042,
+  "RemoteAccessAllowed": true
+}

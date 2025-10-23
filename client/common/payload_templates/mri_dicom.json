@@ -1,0 +1,12 @@
+{
+  "name": "mri_dicom",
+  "protocols": [
+    "DICOM"
+  ],
+  "payload": {
+    "study_uid": "{uuid}",
+    "series": 4,
+    "firmware": "{firmware_version}",
+    "payload_notes": "metadata-only slices"
+  }
+}

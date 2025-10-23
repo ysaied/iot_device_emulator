@@ -1,0 +1,11 @@
+{
+  "name": "smart_plug_coap",
+  "protocols": [
+    "CoAP"
+  ],
+  "payload": {
+    "state": "{choice:on,off}",
+    "watts": "{randfloat:0-1100}",
+    "firmware": "{firmware_version}"
+  }
+}

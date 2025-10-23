@@ -1,0 +1,12 @@
+{
+  "name": "xray_dicom",
+  "protocols": [
+    "DICOM"
+  ],
+  "payload": {
+    "study_uid": "{uuid}",
+    "series_uid": "{uuid}",
+    "slices": 12,
+    "firmware": "{firmware_version}"
+  }
+}

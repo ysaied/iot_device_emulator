@@ -1,0 +1,11 @@
+{
+  "name": "projector_snmp",
+  "protocols": [
+    "SNMP"
+  ],
+  "payload": {
+    "lamp_hours": "{randint:100-5000}",
+    "input_source": "{choice:HDMI1,HDMI2,DP}",
+    "firmware": "{firmware_version}"
+  }
+}

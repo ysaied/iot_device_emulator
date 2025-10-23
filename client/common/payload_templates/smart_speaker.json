@@ -1,0 +1,15 @@
+{
+  "name": "smart_speaker",
+  "protocols": [
+    "MQTT",
+    "HTTP"
+  ],
+  "payload": {
+    "topics": [
+      "voice/{device_id}/cmd",
+      "voice/{device_id}/metrics"
+    ],
+    "firmware": "{firmware_version}",
+    "volume": "{randint:10-60}"
+  }
+}
