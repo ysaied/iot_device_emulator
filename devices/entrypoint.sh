@@ -367,18 +367,22 @@ else
   log_json "ip_acquire_failed"
 fi
 
-register_with_hub() {
+register_once() {
   if [[ -z "${HUB_IP:-}" ]]; then
     log_json "hub_registration_skipped" reason="hub_ip_missing"
-    return
+    return 1
   fi
-  python3 - <<'PY' "${HUB_IP}" "${DEVICE_ID}" "${DEVICE_TYPE}" "${ROLE}" "${DEVICE_IP}" "${PERSONA_PRIMARY_PROTOCOLS:-[]}" "${MAC_ADDRESS}" "${FIRMWARE_VERSION}"
+  if [[ -z "${DEVICE_IP:-}" ]]; then
+    log_json "hub_registration_skipped" reason="ip_missing"
+    return 1
+  fi
+  python3 - <<'PY' "${HUB_IP}" "${DEVICE_ID}" "${DEVICE_TYPE}" "${ROLE}" "${DEVICE_IP}" "${PERSONA_PRIMARY_PROTOCOLS:-[]}" "${MAC_ADDRESS}" "${FIRMWARE_VERSION}" "${HUB_API_PORT:-7000}"
 import json
 import os
 import sys
 from urllib import request
 
-hub_ip, device_id, device_type, role, ip_address, protocols_json, mac_address, firmware = sys.argv[1:9]
+hub_ip, device_id, device_type, role, ip_address, protocols_json, mac_address, firmware, hub_port = sys.argv[1:10]
 try:
     protocols = json.loads(protocols_json) if protocols_json else []
 except json.JSONDecodeError:
@@ -396,18 +400,28 @@ payload = json.dumps(
     }
 ).encode()
 
-url = f"http://{hub_ip}:{os.environ.get('HUB_API_PORT', '7000')}/register"
+url = f"http://{hub_ip}:{hub_port}/register"
 req = request.Request(url, data=payload, headers={"Content-Type": "application/json"})
 try:
     with request.urlopen(req, timeout=5) as resp:
         resp.read()
     print(json.dumps({"event": "hub_registered", "hub": hub_ip, "device_id": device_id}))
+    sys.exit(0)
 except Exception as exc:  # noqa: BLE001
     print(json.dumps({"event": "hub_register_error", "hub": hub_ip, "error": str(exc)}))
+    sys.exit(1)
 PY
 }
 
-register_with_hub
+register_with_hub_loop() {
+  while true; do
+    if register_once; then
+      sleep 60
+    else
+      sleep 10
+    fi
+  done
+}
 
 if [[ "${ENABLE_BROADCAST}" == "true" ]]; then
   DISCOVERY_INTENSITY="${DISCOVERY_INTENSITY}" DEVICE_ID="${DEVICE_ID}" DEVICE_TYPE="${DEVICE_TYPE}" SERVER_IP="${SERVER_IP}" \
@@ -443,6 +457,9 @@ fi
 cleanup() {
   if [[ -n "${CHATTER_PID:-}" ]]; then
     kill "${CHATTER_PID}" 2>/dev/null || true
+  fi
+  if [[ -n "${HUB_REGISTER_PID:-}" ]]; then
+    kill "${HUB_REGISTER_PID}" 2>/dev/null || true
   fi
 }
 trap cleanup EXIT
@@ -489,6 +506,9 @@ wait_for_hub() {
 }
 
 wait_for_hub
+
+register_with_hub_loop &
+HUB_REGISTER_PID=$!
 
 if [[ -n "${AUTOROTATE:-}" ]]; then
   log_json "autorotate_enabled" interval="${AUTOROTATE}"

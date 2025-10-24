@@ -1,6 +1,11 @@
 FROM python:3.11-slim
 
-RUN apt-get update && apt-get install -y --no-install-recommends iproute2 && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        iproute2 \
+        iputils-ping \
+        curl && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt/iot/hub
 

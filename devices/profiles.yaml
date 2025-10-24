@@ -34,12 +34,10 @@ personas:
     protocol: IPP
     primary_protocols:
     - IPP
-    - LPD
     - SNMP
     ports:
-    - 631
-    - 515
-    - 161
+    - 6310
+    - 16100
     dhcp:
       hostname: prt-{device_id}
       vendor_class: IOT-PRINTER-{firmware_version}
@@ -51,7 +49,7 @@ personas:
     - ipp
     payload_template: devices/common/payload_templates/printer_service.json
     vulnerability_profile: weak-creds
-    role: both
+    role: server
   IP_PHONE_SIP:
     display_name: VoIP Phone
     script: ip_phone_sip.py

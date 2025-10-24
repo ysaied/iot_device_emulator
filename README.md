@@ -29,7 +29,7 @@ The lab now models **device containers** that run persona-specific scripts and a
 |--------------|---------------------------|---------------------------|--------------|
 | `client`     | MQTT (`1883/tcp`), HTTP/HTTPS (`80/443/tcp`), SIP (`5060/udp`), RTSP (`8554/tcp`), CoAP (`5683/udp`), BACnet (`47808/udp`), Profinet (`34964/udp`), Modbus TCP (`1502/tcp` as client), DICOM (`11112/tcp` towards hub), SNMP (`16100/udp` towards hub) | none | Registry API (`7000/tcp`), connection probes (above protocols to registered IPs) |
 | `server`     | optional ONVIF/mDNS chatter | RTSP server (`8554/tcp`), DICOM SCP (`11112/tcp`), HTTP metadata (`80/443/tcp`) | Registry service + probes |
-| `both`       | Modbus client polling (`1502/tcp`), IPP POST (`6310/tcp`) | Modbus TCP server (`1502/tcp`), IPP server (`6310/tcp`), SNMP agent (`16100/udp`) | Registry service + probes |
+| `both`       | Modbus client polling (`1502/tcp`) | Modbus TCP server (`1502/tcp`) | Registry service + probes |
 
 > Hub probes run periodically to validate reachability; failed probes log `hub_probe_failed` events.
 
@@ -38,7 +38,7 @@ The lab now models **device containers** that run persona-specific scripts and a
 | Device Type | Role | Client Connections (→ Hub) | Server Listeners (← Device) |
 |-------------|------|----------------------------|-----------------------------|
 | CAMERA_RTSP | server | — | RTSP `8554/tcp` |
-| PRINTER_SERVICE | both | IPP `6310/tcp`, SNMP `16100/udp` | IPP `6310/tcp`, SNMP `16100/udp` |
+| PRINTER_SERVICE | server | — | IPP `6310/tcp`, SNMP `16100/udp` |
 | IP_PHONE_SIP | client | SIP `5060/udp`, RTP keepalive `16384/udp` | — |
 | SMART_TV | client | HTTP `8008/tcp`, HTTPS `443/tcp`, SSDP `1900/udp` | — |
 | SMART_SPEAKER | client | MQTT `1883/tcp` | — |

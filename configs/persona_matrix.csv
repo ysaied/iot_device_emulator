@@ -1,6 +1,6 @@
 device_type,vendor_oui,dhcp_hostname,dhcp_vendor_class,dhcp_client_id_template,firmware_version,role,primary_protocols,ports,discovery_chatter,pairing_behavior,payload_template,vulnerability_profile
 CAMERA_RTSP,00:1A:79,cam-{device_id},IOT-CAMERA-{firmware_version},camera-{device_id},2.1.4,server,RTSP|HTTP|ONVIF,554|8554|80,mdns|ssdp|arp,onvif,devices/common/payload_templates/camera_rtsp.json,weak-creds
-PRINTER_SERVICE,00:1C:BC,prt-{device_id},IOT-PRINTER-{firmware_version},printer-{device_id},6.4.1,both,IPP|LPD|SNMP,631|515|161,mdns|snmp,ipp,devices/common/payload_templates/printer_service.json,weak-creds
+PRINTER_SERVICE,00:1C:BC,prt-{device_id},IOT-PRINTER-{firmware_version},printer-{device_id},6.4.1,server,IPP|SNMP,6310|16100,mdns|snmp,ipp,devices/common/payload_templates/printer_service.json,weak-creds
 IP_PHONE_SIP,00:0F:AC,sip-{device_id},IOT-SIP-{firmware_version},sip-{device_id},3.9.8,client,SIP|RTP,5060|16384,mdns|lldp,sip,devices/common/payload_templates/ip_phone_sip.json,old-ciphers
 SMART_TV,00:17:F2,stv-{device_id},IOT-TV-{firmware_version},smarttv-{device_id},10.2.5,client,SSDP|HTTP|TLS,1900|8008|443,ssdp|mdns,companion-app,devices/common/payload_templates/smart_tv.json,weak-tls
 SMART_SPEAKER,60:45:BD,spk-{device_id},IOT-SPEAKER-{firmware_version},speaker-{device_id},4.6.0,client,MQTT|HTTP|MDNS,1883|8883|8000,mdns|ssdp,companion-app,devices/common/payload_templates/smart_speaker.json,weak-creds
