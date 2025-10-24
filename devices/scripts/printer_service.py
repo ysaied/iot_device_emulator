@@ -8,18 +8,6 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
-from typing import List
-
-import requests
-from pysnmp.hlapi import (
-    CommunityData,
-    ContextData,
-    ObjectIdentity,
-    ObjectType,
-    SnmpEngine,
-    UdpTransportTarget,
-    getCmd,
-)
 
 PARENT_DIR = Path(__file__).resolve().parents[2]
 if str(PARENT_DIR) not in sys.path:
@@ -28,69 +16,13 @@ if str(PARENT_DIR) not in sys.path:
 from devices.scripts.common import (  # noqa: E402
     DEVICE_ID,
     FIRMWARE_VERSION,
-    HUB_IP,
-    SERVER_IP,
-    is_client,
     is_server,
     json_log,
-    jitter,
-    malicious_ping,
 )
 
 IPP_PORT = int(os.environ.get("IPP_PORT", "6310"))
 SNMP_PORT = int(os.environ.get("SNMP_PORT", "16100"))
-
-
-def send_ipp_status() -> None:
-    url = f"http://{SERVER_IP}:{IPP_PORT}/ipp/printer"
-    payload = {
-        "device_id": DEVICE_ID,
-        "firmware": FIRMWARE_VERSION,
-        "status": "idle",
-    }
-    try:
-        resp = requests.post(url, json=payload, timeout=5)
-        json_log("ipp_status", status_code=resp.status_code)
-    except Exception as exc:  # noqa: BLE001
-        json_log("ipp_error", error=str(exc))
-
-
-def poll_snmp() -> None:
-    target_ip = HUB_IP or SERVER_IP
-    try:
-        iterator = getCmd(
-            SnmpEngine(),
-            CommunityData("public"),
-            UdpTransportTarget((target_ip, SNMP_PORT), timeout=2, retries=1),
-            ContextData(),
-            ObjectType(ObjectIdentity("1.3.6.1.2.1.1.1.0")),
-        )
-        response = next(iterator)
-    except StopIteration:
-        json_log("snmp_error", error="no_response")
-        return
-    except Exception as exc:  # noqa: BLE001
-        json_log("snmp_error", error=str(exc))
-        return
-
-    error_indication, error_status, _, var_binds = response
-    if error_indication:
-        json_log("snmp_error", error=str(error_indication))
-        return
-    if error_status:
-        json_log("snmp_error", error=str(error_status.prettyPrint()))
-        return
-
-    for var_bind in var_binds:
-        json_log("snmp_response", value=" = ".join([x.prettyPrint() for x in var_bind]))
-
-
-def run_client() -> None:
-    while True:
-        send_ipp_status()
-        poll_snmp()
-        malicious_ping("/printer")
-        time.sleep(jitter(20))
+START_TIME = time.time()
 
 
 class SimpleIPPHandler(BaseHTTPRequestHandler):
@@ -102,7 +34,7 @@ class SimpleIPPHandler(BaseHTTPRequestHandler):
         except json.JSONDecodeError:
             payload = {"raw": body.decode(errors="ignore")}
         json_log("ipp_server_request", path=self.path, payload=payload)
-        response = json.dumps({"status": "ok"}).encode()
+        response = json.dumps({"status": "accepted"}).encode()
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(response)))
@@ -125,9 +57,8 @@ def run_ipp_server() -> None:
 def run_snmp_server() -> None:
     from pysnmp.carrier.asyncore.dgram import udp  # noqa: E402
     from pysnmp.entity import config, engine  # noqa: E402
-    from pysnmp.entity.rfc3413 import cmdrsp  # noqa: E402
-    from pysnmp.proto import rfc1905  # noqa: E402
-    from pysnmp.smi import rfc1902  # noqa: E402
+    from pysnmp.entity.rfc3413 import cmdrsp, context  # noqa: E402
+    from pysnmp.smi import builder, rfc1902  # noqa: E402
 
     snmp_engine = engine.SnmpEngine()
 
@@ -137,30 +68,36 @@ def run_snmp_server() -> None:
         udp.UdpTransport().openServerMode(("0.0.0.0", SNMP_PORT)),
     )
     config.addV1System(snmp_engine, "printer-agent", "public")
-    config.addVacmUser(snmp_engine, 1, "printer-agent", "noAuthNoPriv", readSubTree=(1, 3, 6))
     config.addVacmUser(snmp_engine, 2, "printer-agent", "noAuthNoPriv", readSubTree=(1, 3, 6))
-    config.addContext(snmp_engine, "")
+    snmp_context = context.SnmpContext(snmp_engine)
 
-    def cb_fun(snmp_engine, state_reference, context_engine_id, context_name, var_binds, cb_ctx):  # noqa: ANN001
-        oids: List[str] = []
-        for idx, (name, value) in enumerate(var_binds):
-            oid_str = str(name)
-            oids.append(oid_str)
-            if oid_str == "1.3.6.1.2.1.1.1.0":
-                var_binds[idx] = (
-                    name,
-                    rfc1902.OctetString(f"Printer {DEVICE_ID} Firmware {FIRMWARE_VERSION}"),
-                )
-            elif oid_str == "1.3.6.1.2.1.1.3.0":
-                var_binds[idx] = (name, rfc1902.TimeTicks(int(time.time() * 100)))
-            else:
-                var_binds[idx] = (name, rfc1905.NoSuchObject())
-        json_log("snmp_server_request", oids=oids)
+    mib_builder = snmp_engine.getMibBuilder()
+    (MibScalarInstance,) = mib_builder.importSymbols("SNMPv2-SMI", "MibScalarInstance")
+    sysDescr, sysUpTime = mib_builder.importSymbols("SNMPv2-MIB", "sysDescr", "sysUpTime")
 
-    cmdrsp.GetCommandResponder(snmp_engine, cb_fun)
+    class SysDescrInstance(MibScalarInstance):
+        def readGet(self, name, *args, **kwargs):
+            json_log("snmp_server_request", oids=[str(name)], type="sysDescr")
+            self.syntax = rfc1902.OctetString(f"Printer {DEVICE_ID} Firmware {FIRMWARE_VERSION}")
+            return super().readGet(name, *args, **kwargs)
+
+    class SysUpTimeInstance(MibScalarInstance):
+        def readGet(self, name, *args, **kwargs):
+            uptime = int((time.time() - START_TIME) * 100)
+            json_log("snmp_server_request", oids=[str(name)], type="sysUpTime", uptime=uptime)
+            self.syntax = rfc1902.TimeTicks(uptime)
+            return super().readGet(name, *args, **kwargs)
+
+    mib_builder.exportSymbols(
+        "__PRINTER_MIB",
+        SysDescrInstance(sysDescr.name, (0,), sysDescr.syntax.clone("")),
+        SysUpTimeInstance(sysUpTime.name, (0,), sysUpTime.syntax.clone(0)),
+    )
+
+    cmdrsp.GetCommandResponder(snmp_engine, snmp_context)
     json_log("snmp_server_start", port=SNMP_PORT)
-    snmp_engine.transportDispatcher.jobStarted(1)
     try:
+        snmp_engine.transportDispatcher.jobStarted(1)
         snmp_engine.transportDispatcher.runDispatcher()
     except Exception as exc:  # noqa: BLE001
         json_log("snmp_server_error", error=str(exc))
@@ -169,19 +106,22 @@ def run_snmp_server() -> None:
 
 
 def main() -> None:
-    workers: list[threading.Thread] = []
-    if is_server():
-        ipp_thread = threading.Thread(target=run_ipp_server, daemon=True)
-        ipp_thread.start()
-        workers.append(ipp_thread)
-        snmp_thread = threading.Thread(target=run_snmp_server, daemon=True)
-        snmp_thread.start()
-        workers.append(snmp_thread)
-    if is_client():
-        run_client()
-    else:
+    if not is_server():
+        json_log("printer_role_skip", reason="not_server")
         while True:
             time.sleep(60)
+
+    threads = []
+    ipp_thread = threading.Thread(target=run_ipp_server, daemon=True)
+    ipp_thread.start()
+    threads.append(ipp_thread)
+
+    snmp_thread = threading.Thread(target=run_snmp_server, daemon=True)
+    snmp_thread.start()
+    threads.append(snmp_thread)
+
+    while True:
+        time.sleep(60)
 
 
 if __name__ == "__main__":
