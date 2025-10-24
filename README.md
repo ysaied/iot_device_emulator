@@ -65,17 +65,17 @@ Persona definitions live in `client/profiles.yaml` and `configs/persona_matrix.c
 Additional persona details and port lists are documented in `client/README.device-list.md`.
 
 ## MAC Handling & SAFE_MODE
-`client/common/macgen.sh` generates MAC addresses by concatenating the persona vendor OUI with random suffix bytes, storing allocations in `/var/lib/iot-macs/assigned_macs.txt` to avoid duplication. The client entrypoint applies the MAC with `ip link set eth0 address <MAC>` before DHCP negotiation.
+`devices/common/macgen.sh` generates MAC addresses by concatenating the persona vendor OUI with random suffix bytes, storing allocations in `/var/lib/iot-macs/assigned_macs.txt` to avoid duplication. The client entrypoint applies the MAC with `ip link set eth0 address <MAC>` before DHCP negotiation.
 
 - Grant `--cap-add=NET_ADMIN` for realistic MAC churn.
 - Set `SAFE_MODE=true` to skip the in-container MAC change; orchestrators can then provide `--mac-address` externally while still benefiting from persona-specific DHCP identifiers.
 
 ## Persona Enhancements
 - **Firmware propagation**: `FIRMWARE_VERSION` is embedded into DHCP vendor-class/client-id strings, HTTP headers, MQTT client IDs, and DICOM metadata.
-- **Discovery chatter**: `client/common/chatter_generator.sh` emits periodic mDNS, SSDP, and ARP probes. Tune with `DISCOVERY_INTENSITY=low|med|high` or disable with `ENABLE_BROADCAST=false`.
+- **Discovery chatter**: `devices/common/chatter_generator.sh` emits periodic mDNS, SSDP, and ARP probes. Tune with `DISCOVERY_INTENSITY=low|med|high` or disable with `ENABLE_BROADCAST=false`.
 - **Pairing chatter**: Personas with `pairing_chatter` lists will log simulated onboarding events and can be extended to call REST pairing hooks.
-- **Vulnerability toggles**: `client/common/vuln_injector.py` introduces weak TLS ciphers, default credentials, or attack-mode beacons based on the persona `vulnerability_profile`. Enable globally with `MALICIOUS_MODE=true`.
-- **Payload realism**: `client/common/payload_generator.py` renders JSON payload templates with jitter, waveform synthesis, and register ranges per persona.
+- **Vulnerability toggles**: `devices/common/vuln_injector.py` introduces weak TLS ciphers, default credentials, or attack-mode beacons based on the persona `vulnerability_profile`. Enable globally with `MALICIOUS_MODE=true`.
+- **Payload realism**: `devices/common/payload_generator.py` renders JSON payload templates with jitter, waveform synthesis, and register ranges per persona.
 
 ## Orchestration at Scale
 - **Spawner**: `python scripts/spawner.py --server-ip 192.168.50.10 --count 10` rapidly launches persona mixtures. Use `--dry-run` to review docker commands.
@@ -96,8 +96,8 @@ Provide `HOSTNAME_MAP` (comma-separated `name` or `name=ip` entries) to the clie
 - GitHub Actions (`.github/workflows/ci.yml`) runs `shellcheck`, `flake8`, and `pytest` on every push/PR.
 
 ## Contribution Guidelines
-- Prefer reusable utilities under `client/common` when adding new personas.
-- Keep persona metadata synchronized between `client/profiles.yaml`, `configs/persona_matrix.csv`, and `client/common/payload_templates/`.
+- Prefer reusable utilities under `devices/common` when adding new personas.
+- Keep persona metadata synchronized between `client/profiles.yaml`, `configs/persona_matrix.csv`, and `devices/common/payload_templates/`.
 - Maintain JSON logging for new scripts to preserve mapper compatibility.
 - Run `flake8` and `pytest` locally before submitting PRs; ensure shell scripts stay `shellcheck` clean.
 

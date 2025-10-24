@@ -2,7 +2,7 @@
 
 The IoT Device Emulator repository provides two container images and supporting tooling:
 
-- **Client image** – Runs persona scripts that emulate IoT/OT device traffic. A shell entrypoint renders persona metadata, adjusts the container MAC address, launches DHCP, and orchestrates protocol chatter. Device scripts use shared helpers (`client/common`) for JSON logging, payload generation, vulnerability toggles, and malicious-mode beacons.
+- **Client image** – Runs persona scripts that emulate IoT/OT device traffic. A shell entrypoint renders persona metadata, adjusts the container MAC address, launches DHCP, and orchestrates protocol chatter. Device scripts use shared helpers (`devices/common`) for JSON logging, payload generation, vulnerability toggles, and malicious-mode beacons.
 - **Server image** – Aggregates lightweight protocol endpoints (MQTT, Modbus/TCP, RTSP, SIP, SNMP, CoAP, BACnet, DICOM, HTTP/HTTPS) under `supervisord`. Custom Python services supplement packages from the base distribution to keep footprint small while providing deterministic logging via `server/logshipper.py` and visibility through `server/status_api.py`.
 - **Mapper service** – Optional host-side helper that consumes server log output and writes `/data/mappings.json`, offering a MAC-to-device manifest for integration with PAN-OS Device-ID or other security analytics.
 

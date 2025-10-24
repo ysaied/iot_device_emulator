@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from client.common.payload_generator import build_payload
+from devices.common.payload_generator import build_payload
 
 
 def test_payload_generator_renders_placeholders(tmp_path):
@@ -18,7 +18,7 @@ def test_payload_generator_renders_placeholders(tmp_path):
 
 
 def test_waveform_placeholder():
-    template = Path("client/common/payload_templates/ecg_mqtt.json")
+    template = Path("devices/common/payload_templates/ecg_mqtt.json")
     payload = build_payload(
         template,
         {"device_id": "ecg1", "firmware_version": "8.2.6", "server_ip": "1.1.1.1"},

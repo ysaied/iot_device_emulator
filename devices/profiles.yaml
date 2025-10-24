@@ -1,0 +1,493 @@
+personas:
+  CAMERA_RTSP:
+    display_name: Industrial Camera
+    script: camera_rtsp.py
+    vendor_oui: 00:1A:79
+    firmware_version: 2.1.4
+    protocol: RTSP
+    primary_protocols:
+    - RTSP
+    - HTTP
+    - ONVIF
+    ports:
+    - 554
+    - 8554
+    - 80
+    dhcp:
+      hostname: cam-{device_id}
+      vendor_class: IOT-CAMERA-{firmware_version}
+      client_id: camera-{device_id}
+    discovery_chatter:
+    - mdns
+    - ssdp
+    - arp
+    pairing_chatter:
+    - onvif
+    payload_template: devices/common/payload_templates/camera_rtsp.json
+    vulnerability_profile: weak-creds
+    role: server
+  PRINTER_SERVICE:
+    display_name: Office Printer
+    script: printer_service.py
+    vendor_oui: 00:1C:BC
+    firmware_version: 6.4.1
+    protocol: IPP
+    primary_protocols:
+    - IPP
+    - LPD
+    - SNMP
+    ports:
+    - 631
+    - 515
+    - 161
+    dhcp:
+      hostname: prt-{device_id}
+      vendor_class: IOT-PRINTER-{firmware_version}
+      client_id: printer-{device_id}
+    discovery_chatter:
+    - mdns
+    - snmp
+    pairing_chatter:
+    - ipp
+    payload_template: devices/common/payload_templates/printer_service.json
+    vulnerability_profile: weak-creds
+    role: both
+  IP_PHONE_SIP:
+    display_name: VoIP Phone
+    script: ip_phone_sip.py
+    vendor_oui: 00:0F:AC
+    firmware_version: 3.9.8
+    protocol: SIP
+    primary_protocols:
+    - SIP
+    - RTP
+    ports:
+    - 5060
+    - 16384
+    dhcp:
+      hostname: sip-{device_id}
+      vendor_class: IOT-SIP-{firmware_version}
+      client_id: sip-{device_id}
+    discovery_chatter:
+    - mdns
+    - lldp
+    pairing_chatter:
+    - sip
+    payload_template: devices/common/payload_templates/ip_phone_sip.json
+    vulnerability_profile: old-ciphers
+    role: client
+  SMART_TV:
+    display_name: Smart TV
+    script: smart_tv.py
+    vendor_oui: 00:17:F2
+    firmware_version: 10.2.5
+    protocol: HTTP
+    primary_protocols:
+    - SSDP
+    - HTTP
+    - TLS
+    ports:
+    - 1900
+    - 8008
+    - 443
+    dhcp:
+      hostname: stv-{device_id}
+      vendor_class: IOT-TV-{firmware_version}
+      client_id: smarttv-{device_id}
+    discovery_chatter:
+    - ssdp
+    - mdns
+    pairing_chatter:
+    - companion-app
+    payload_template: devices/common/payload_templates/smart_tv.json
+    vulnerability_profile: weak-tls
+    role: client
+  SMART_SPEAKER:
+    display_name: Smart Speaker
+    script: smart_speaker.py
+    vendor_oui: 60:45:BD
+    firmware_version: 4.6.0
+    protocol: MQTT
+    primary_protocols:
+    - MQTT
+    - HTTP
+    - mDNS
+    ports:
+    - 1883
+    - 8883
+    - 8000
+    dhcp:
+      hostname: spk-{device_id}
+      vendor_class: IOT-SPEAKER-{firmware_version}
+      client_id: speaker-{device_id}
+    discovery_chatter:
+    - mdns
+    - ssdp
+    pairing_chatter:
+    - companion-app
+    payload_template: devices/common/payload_templates/smart_speaker.json
+    vulnerability_profile: weak-creds
+    role: client
+  THERMOSTAT_MQTT:
+    display_name: HVAC Thermostat
+    script: thermostat_mqtt.py
+    vendor_oui: 50:70:0E
+    firmware_version: 1.8.2
+    protocol: MQTT
+    primary_protocols:
+    - MQTT
+    - HTTP
+    ports:
+    - 1883
+    - 8883
+    dhcp:
+      hostname: thm-{device_id}
+      vendor_class: IOT-THERMO-{firmware_version}
+      client_id: thermo-{device_id}
+    discovery_chatter:
+    - mdns
+    - arp
+    pairing_chatter:
+    - provisioning
+    payload_template: devices/common/payload_templates/thermostat_mqtt.json
+    vulnerability_profile: none
+    role: client
+  SMART_PLUG_COAP:
+    display_name: Smart Plug
+    script: smart_plug_coap.py
+    vendor_oui: 9C:5C:8E
+    firmware_version: 2.3.0
+    protocol: CoAP
+    primary_protocols:
+    - CoAP
+    - HTTP
+    ports:
+    - 5683
+    - 80
+    dhcp:
+      hostname: plug-{device_id}
+      vendor_class: IOT-PLUG-{firmware_version}
+      client_id: plug-{device_id}
+    discovery_chatter:
+    - mdns
+    - ssdp
+    pairing_chatter:
+    - onboarding
+    payload_template: devices/common/payload_templates/smart_plug_coap.json
+    vulnerability_profile: weak-creds
+    role: client
+  NVR_SIM:
+    display_name: Network Video Recorder
+    script: nvr_sim.py
+    vendor_oui: 40:16:7E
+    firmware_version: 5.2.1
+    protocol: RTSP
+    primary_protocols:
+    - RTSP
+    - SMB
+    - HTTP
+    ports:
+    - 554
+    - 445
+    - 80
+    dhcp:
+      hostname: nvr-{device_id}
+      vendor_class: IOT-NVR-{firmware_version}
+      client_id: nvr-{device_id}
+    discovery_chatter:
+    - mdns
+    - ssdp
+    - arp
+    pairing_chatter:
+    - onvif
+    payload_template: devices/common/payload_templates/nvr_sim.json
+    vulnerability_profile: cve-sim
+    role: client
+  PROJECTOR_SNMP:
+    display_name: Connected Projector
+    script: projector_snmp.py
+    vendor_oui: 00:26:75
+    firmware_version: 7.1.0
+    protocol: SNMP
+    primary_protocols:
+    - SNMP
+    - HTTP
+    ports:
+    - 161
+    - 80
+    dhcp:
+      hostname: prj-{device_id}
+      vendor_class: IOT-PROJECTOR-{firmware_version}
+      client_id: projector-{device_id}
+    discovery_chatter:
+    - mdns
+    - ssdp
+    pairing_chatter:
+    - projector-control
+    payload_template: devices/common/payload_templates/projector_snmp.json
+    vulnerability_profile: old-ciphers
+    role: client
+  SMART_WATCH:
+    display_name: Smart Watch
+    script: smart_watch.py
+    vendor_oui: 24:6F:28
+    firmware_version: 3.2.9
+    protocol: HTTPS
+    primary_protocols:
+    - HTTPS
+    - MQTT
+    ports:
+    - 443
+    - 8883
+    dhcp:
+      hostname: sw-{device_id}
+      vendor_class: IOT-WATCH-{firmware_version}
+      client_id: watch-{device_id}
+    discovery_chatter:
+    - mdns
+    - arp
+    pairing_chatter:
+    - bluetooth-proxy
+    payload_template: devices/common/payload_templates/smart_watch.json
+    vulnerability_profile: weak-tls
+    role: client
+  PLC_MODBUS:
+    display_name: PLC Controller
+    script: plc_modbus.py
+    vendor_oui: 00:13:74
+    firmware_version: 11.0.3
+    protocol: Modbus
+    primary_protocols:
+    - ModbusTCP
+    - HTTP
+    ports:
+    - 502
+    - 80
+    dhcp:
+      hostname: plc-{device_id}
+      vendor_class: IOT-PLC-{firmware_version}
+      client_id: plc-{device_id}
+    discovery_chatter:
+    - arp
+    - lldp
+    pairing_chatter:
+    - engineering-station
+    payload_template: devices/common/payload_templates/plc_modbus.json
+    vulnerability_profile: cve-sim
+    role: both
+  SCADA_SENSOR:
+    display_name: SCADA Sensor
+    script: scada_sensor.py
+    vendor_oui: 5C:51:88
+    firmware_version: 5.4.2
+    protocol: MQTT
+    primary_protocols:
+    - MQTT
+    - ModbusTCP
+    ports:
+    - 1883
+    - 502
+    dhcp:
+      hostname: scada-{device_id}
+      vendor_class: IOT-SCADA-{firmware_version}
+      client_id: scada-{device_id}
+    discovery_chatter:
+    - arp
+    - mdns
+    pairing_chatter:
+    - gateway
+    payload_template: devices/common/payload_templates/scada_sensor.json
+    vulnerability_profile: weak-creds
+    role: client
+  HMI_PANEL:
+    display_name: HMI Panel
+    script: hmi_panel.py
+    vendor_oui: 70:85:C2
+    firmware_version: 9.3.4
+    protocol: HTTP
+    primary_protocols:
+    - HTTP
+    - ModbusTCP
+    ports:
+    - 80
+    - 502
+    dhcp:
+      hostname: hmi-{device_id}
+      vendor_class: IOT-HMI-{firmware_version}
+      client_id: hmi-{device_id}
+    discovery_chatter:
+    - arp
+    - mdns
+    pairing_chatter:
+    - operator-console
+    payload_template: devices/common/payload_templates/hmi_panel.json
+    vulnerability_profile: weak-creds
+    role: client
+  BACNET_DEVICE:
+    display_name: BACnet Controller
+    script: bacnet_device.py
+    vendor_oui: 00:20:91
+    firmware_version: 3.8.7
+    protocol: BACnet
+    primary_protocols:
+    - BACnet
+    - UDP
+    ports:
+    - 47808
+    dhcp:
+      hostname: bac-{device_id}
+      vendor_class: IOT-BACNET-{firmware_version}
+      client_id: bac-{device_id}
+    discovery_chatter:
+    - bacnet
+    - arp
+    pairing_chatter:
+    - building-console
+    payload_template: devices/common/payload_templates/bacnet_device.json
+    vulnerability_profile: old-ciphers
+    role: client
+  PROFINET_LIGHT:
+    display_name: Profinet Beacon
+    script: profinet_light.py
+    vendor_oui: 34:68:95
+    firmware_version: 1.1.0
+    protocol: Profinet
+    primary_protocols:
+    - Profinet
+    - UDP
+    ports:
+    - 34964
+    dhcp:
+      hostname: pnet-{device_id}
+      vendor_class: IOT-PROFINET-{firmware_version}
+      client_id: profinet-{device_id}
+    discovery_chatter:
+    - profinet
+    - arp
+    pairing_chatter:
+    - controller-sync
+    payload_template: devices/common/payload_templates/profinet_light.json
+    vulnerability_profile: none
+    role: client
+  LIGHTING_CONTROLLER:
+    display_name: Lighting Controller
+    script: lighting_controller.py
+    vendor_oui: 84:18:3A
+    firmware_version: 3.5.2
+    protocol: MQTT
+    primary_protocols:
+    - MQTT
+    - CoAP
+    ports:
+    - 1883
+    - 5683
+    dhcp:
+      hostname: light-{device_id}
+      vendor_class: IOT-LIGHT-{firmware_version}
+      client_id: light-{device_id}
+    discovery_chatter:
+    - mdns
+    - ssdp
+    pairing_chatter:
+    - lighting-app
+    payload_template: devices/common/payload_templates/lighting_controller.json
+    vulnerability_profile: weak-creds
+    role: client
+  XRAY_DICOM:
+    display_name: X-Ray System
+    script: xray_dicom.py
+    vendor_oui: 00:1B:21
+    firmware_version: 14.0.1
+    protocol: DICOM
+    primary_protocols:
+    - DICOM
+    - HTTP
+    ports:
+    - 104
+    - 443
+    dhcp:
+      hostname: xray-{device_id}
+      vendor_class: IOT-XRAY-{firmware_version}
+      client_id: xray-{device_id}
+    discovery_chatter:
+    - mdns
+    - dicom
+    pairing_chatter:
+    - pacs-registration
+    payload_template: devices/common/payload_templates/xray_dicom.json
+    vulnerability_profile: weak-tls
+    role: server
+  ECG_MQTT:
+    display_name: ECG Monitor
+    script: ecg_mqtt.py
+    vendor_oui: 7C:2E:BD
+    firmware_version: 8.2.6
+    protocol: MQTT
+    primary_protocols:
+    - MQTT
+    - HTTPS
+    ports:
+    - 1883
+    - 443
+    dhcp:
+      hostname: ecg-{device_id}
+      vendor_class: IOT-ECG-{firmware_version}
+      client_id: ecg-{device_id}
+    discovery_chatter:
+    - mdns
+    - arp
+    pairing_chatter:
+    - hospital-app
+    payload_template: devices/common/payload_templates/ecg_mqtt.json
+    vulnerability_profile: weak-tls
+    role: client
+  INFUSION_PUMP:
+    display_name: Infusion Pump
+    script: infusion_pump.py
+    vendor_oui: 08:6B:D7
+    firmware_version: 6.7.1
+    protocol: MQTT
+    primary_protocols:
+    - MQTT
+    - SNMP
+    - HTTP
+    ports:
+    - 1883
+    - 161
+    - 443
+    dhcp:
+      hostname: pump-{device_id}
+      vendor_class: IOT-PUMP-{firmware_version}
+      client_id: pump-{device_id}
+    discovery_chatter:
+    - mdns
+    - snmp
+    pairing_chatter:
+    - nurse-station
+    payload_template: devices/common/payload_templates/infusion_pump.json
+    vulnerability_profile: weak-creds
+    role: client
+  MRI_DICOM:
+    display_name: MRI Scanner
+    script: mri_dicom.py
+    vendor_oui: 00:2A:85
+    firmware_version: 12.5.0
+    protocol: DICOM
+    primary_protocols:
+    - DICOM
+    - HTTPS
+    ports:
+    - 104
+    - 443
+    dhcp:
+      hostname: mri-{device_id}
+      vendor_class: IOT-MRI-{firmware_version}
+      client_id: mri-{device_id}
+    discovery_chatter:
+    - dicom
+    - mdns
+    pairing_chatter:
+    - pacs-registration
+    payload_template: devices/common/payload_templates/mri_dicom.json
+    vulnerability_profile: cve-sim
+    role: client
