@@ -33,6 +33,31 @@ The lab now models **device containers** that run persona-specific scripts and a
 
 > Hub probes run periodically to validate reachability; failed probes log `hub_probe_failed` events.
 
+### Persona Protocol Matrix
+
+| Device Type | Role | Client Connections (→ Hub) | Server Listeners (← Device) |
+|-------------|------|----------------------------|-----------------------------|
+| CAMERA_RTSP | server | — | RTSP `8554/tcp` |
+| PRINTER_SERVICE | both | IPP `6310/tcp`, SNMP `16100/udp` | IPP `6310/tcp`, SNMP `16100/udp` |
+| IP_PHONE_SIP | client | SIP `5060/udp`, RTP keepalive `16384/udp` | — |
+| SMART_TV | client | HTTP `8008/tcp`, HTTPS `443/tcp`, SSDP `1900/udp` | — |
+| SMART_SPEAKER | client | MQTT `1883/tcp` | — |
+| THERMOSTAT_MQTT | client | MQTT `1883/tcp` | — |
+| SMART_PLUG_COAP | client | CoAP `5683/udp`, HTTP `80/tcp` | — |
+| NVR_SIM | client | RTSP `554/tcp`, HTTP `80/tcp` | — |
+| PROJECTOR_SNMP | client | SNMP `161/udp`, HTTP `80/tcp` | — |
+| SMART_WATCH | client | HTTPS `443/tcp`, MQTT `8883/tcp` | — |
+| PLC_MODBUS | both | Modbus TCP `1502/tcp` | Modbus TCP `1502/tcp` |
+| SCADA_SENSOR | client | MQTT `1883/tcp`, Modbus TCP `1502/tcp` | — |
+| HMI_PANEL | client | HTTP `80/tcp`, Modbus TCP `1502/tcp` | — |
+| BACNET_DEVICE | client | BACnet/IP `47808/udp` | — |
+| PROFINET_LIGHT | client | Profinet discovery `34964/udp` | — |
+| LIGHTING_CONTROLLER | client | MQTT `1883/tcp`, CoAP `5683/udp` | — |
+| XRAY_DICOM | server | — | DICOM `11112/tcp` |
+| ECG_MQTT | client | MQTT `1883/tcp`, HTTPS `443/tcp` | — |
+| INFUSION_PUMP | client | MQTT `1883/tcp`, SNMP traps `162/udp`, HTTPS `443/tcp` | — |
+| MRI_DICOM | client | DICOM `11112/tcp`, HTTPS `443/tcp` | — |
+
 ## Workflow
 
 1. **Build images**

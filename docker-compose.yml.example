@@ -1,70 +1,93 @@
 version: "3.8"
 
-services:
-  server:
-    image: iot-server
-    container_name: iot-server
-    networks:
-      server_net:
-        ipv4_address: 192.168.50.10
-    ports:
-      - "80:80"
-      - "443:443"
-      - "1883:1883"
-      - "502:502"
-      - "554:554"
-      - "8554:8554"
-      - "104:104"
-      - "5060:5060/udp"
-    volumes:
-      - ./data:/data
+networks:
+  lab_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.50.0/24
 
-  camera:
-    image: iot-client
+services:
+  hub:
+    image: iot-hub
+    container_name: hub
+    networks:
+      lab_net:
+        ipv4_address: 192.168.50.10
+    environment:
+      HUB_API_PORT: 7000
+      REGISTRY_DB_PATH: /data/hub_registry.db
+      MODBUS_PORT: 1502
+      DICOM_PORT: 11112
+      RTSP_PORT: 8554
+      IPP_PORT: 6310
+      SNMP_PORT: 16100
+    ports:
+      - "7000:7000"
+    volumes:
+      - ./data/hub:/data
+
+  device-camera:
+    image: iot-device
     depends_on:
-      - server
+      - hub
     cap_add:
       - NET_ADMIN
     environment:
       DEVICE_TYPE: CAMERA_RTSP
       DEVICE_ID: cam01
-      SERVER_IP: 192.168.50.10
+      HUB_IP: 192.168.50.10
+      ROLE: server
+      RTSP_PORT: 8554
     networks:
-      server_net: {}
+      lab_net: {}
 
-  printer:
-    image: iot-client
+  device-printer:
+    image: iot-device
     depends_on:
-      - server
+      - hub
     cap_add:
       - NET_ADMIN
     environment:
       DEVICE_TYPE: PRINTER_SERVICE
       DEVICE_ID: prn01
-      SERVER_IP: 192.168.50.10
+      HUB_IP: 192.168.50.10
+      ROLE: both
+      IPP_PORT: 6310
+      SNMP_PORT: 16100
     networks:
-      server_net: {}
+      lab_net: {}
 
-  plc:
-    image: iot-client
+  device-plc:
+    image: iot-device
     depends_on:
-      - server
+      - hub
     cap_add:
       - NET_ADMIN
     environment:
       DEVICE_TYPE: PLC_MODBUS
       DEVICE_ID: plc01
-      SERVER_IP: 192.168.50.10
+      HUB_IP: 192.168.50.10
+      ROLE: both
+      MODBUS_PORT: 1502
     networks:
-      server_net: {}
+      lab_net: {}
 
-networks:
-  server_net:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 192.168.50.0/24
-# To use macvlan replace the network definition with:
+# Example extensions:
+#  device-dicom:
+#    image: iot-device
+#    environment:
+#      DEVICE_TYPE: XRAY_DICOM
+#      DEVICE_ID: xray01
+#      HUB_IP: 192.168.50.10
+#      ROLE: server
+#      DICOM_PORT: 11112
+#    cap_add:
+#      - NET_ADMIN
+#    networks:
+#      lab_net: {}
+#
+# To switch to macvlan replace the network definition with:
 #  driver: macvlan
 #  driver_opts:
 #    parent: eth0
