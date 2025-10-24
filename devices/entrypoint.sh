@@ -272,6 +272,7 @@ export ROLE
 log_json "persona_selected" device_type="${DEVICE_TYPE}" display_name="${PERSONA_DISPLAY_NAME}" firmware="${FIRMWARE_VERSION}" role="${ROLE}"
 
 MAC_ADDRESS="$(VENDOR_OUI="${PERSONA_VENDOR_OUI}" SAFE_MODE="${SAFE_MODE}" /opt/iot/devices/common/macgen.sh)"
+export MAC_ADDRESS
 
 if [[ "${DRY_RUN}" == "true" ]]; then
   log_json "dry_run" mac="${MAC_ADDRESS}" dhcp_hostname="${PERSONA_DHCP_HOSTNAME}" vendor_class="${PERSONA_DHCP_VENDOR_CLASS}"
@@ -361,67 +362,12 @@ get_ip_address() {
 }
 
 DEVICE_IP="$(get_ip_address)"
+export DEVICE_IP
 if [[ -n "${DEVICE_IP}" ]]; then
   log_json "ip_acquired" ip="${DEVICE_IP}"
 else
   log_json "ip_acquire_failed"
 fi
-
-register_once() {
-  if [[ -z "${HUB_IP:-}" ]]; then
-    log_json "hub_registration_skipped" reason="hub_ip_missing"
-    return 1
-  fi
-  if [[ -z "${DEVICE_IP:-}" ]]; then
-    log_json "hub_registration_skipped" reason="ip_missing"
-    return 1
-  fi
-  python3 - <<'PY' "${HUB_IP}" "${DEVICE_ID}" "${DEVICE_TYPE}" "${ROLE}" "${DEVICE_IP}" "${PERSONA_PRIMARY_PROTOCOLS:-[]}" "${MAC_ADDRESS}" "${FIRMWARE_VERSION}" "${HUB_API_PORT:-7000}"
-import json
-import os
-import sys
-from urllib import request
-
-hub_ip, device_id, device_type, role, ip_address, protocols_json, mac_address, firmware, hub_port = sys.argv[1:10]
-try:
-    protocols = json.loads(protocols_json) if protocols_json else []
-except json.JSONDecodeError:
-    protocols = []
-
-payload = json.dumps(
-    {
-        "device_id": device_id,
-        "device_type": device_type,
-        "role": role,
-        "ip_address": ip_address,
-        "protocols": protocols,
-        "mac": mac_address,
-        "firmware": firmware,
-    }
-).encode()
-
-url = f"http://{hub_ip}:{hub_port}/register"
-req = request.Request(url, data=payload, headers={"Content-Type": "application/json"})
-try:
-    with request.urlopen(req, timeout=5) as resp:
-        resp.read()
-    print(json.dumps({"event": "hub_registered", "hub": hub_ip, "device_id": device_id}))
-    sys.exit(0)
-except Exception as exc:  # noqa: BLE001
-    print(json.dumps({"event": "hub_register_error", "hub": hub_ip, "error": str(exc)}))
-    sys.exit(1)
-PY
-}
-
-register_with_hub_loop() {
-  while true; do
-    if register_once; then
-      sleep 60
-    else
-      sleep 10
-    fi
-  done
-}
 
 if [[ "${ENABLE_BROADCAST}" == "true" ]]; then
   DISCOVERY_INTENSITY="${DISCOVERY_INTENSITY}" DEVICE_ID="${DEVICE_ID}" DEVICE_TYPE="${DEVICE_TYPE}" SERVER_IP="${SERVER_IP}" \
@@ -507,7 +453,7 @@ wait_for_hub() {
 
 wait_for_hub
 
-register_with_hub_loop &
+python3 /opt/iot/devices/register_agent.py &
 HUB_REGISTER_PID=$!
 
 if [[ -n "${AUTOROTATE:-}" ]]; then

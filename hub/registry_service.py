@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import List
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 DB_PATH = Path(os.environ.get("REGISTRY_DB_PATH", "/data/hub_registry.db"))
@@ -27,10 +28,18 @@ def init_db() -> None:
                 role TEXT,
                 ip_address TEXT,
                 protocols TEXT,
-                last_seen REAL
+                last_seen REAL,
+                firmware TEXT,
+                mac TEXT
             )
             """
         )
+        # Ensure new columns exist when upgrading from older schema
+        for column in ("firmware", "mac"):
+            try:
+                conn.execute(f"ALTER TABLE devices ADD COLUMN {column} TEXT")
+            except sqlite3.OperationalError:
+                pass
         conn.commit()
 
 
@@ -40,6 +49,8 @@ class Registration(BaseModel):
     role: str
     ip_address: str
     protocols: List[str] = []
+    firmware: str | None = None
+    mac: str | None = None
 
 
 @app.on_event("startup")
@@ -53,14 +64,16 @@ async def register_device(payload: Registration) -> dict[str, str]:
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute(
             """
-            INSERT INTO devices(device_id, device_type, role, ip_address, protocols, last_seen)
-            VALUES(?, ?, ?, ?, ?, ?)
+            INSERT INTO devices(device_id, device_type, role, ip_address, protocols, last_seen, firmware, mac)
+            VALUES(?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(device_id) DO UPDATE SET
                 device_type=excluded.device_type,
                 role=excluded.role,
                 ip_address=excluded.ip_address,
                 protocols=excluded.protocols,
-                last_seen=excluded.last_seen
+                last_seen=excluded.last_seen,
+                firmware=excluded.firmware,
+                mac=excluded.mac
             """,
             (
                 payload.device_id,
@@ -69,17 +82,24 @@ async def register_device(payload: Registration) -> dict[str, str]:
                 payload.ip_address,
                 json.dumps(payload.protocols),
                 now,
+                payload.firmware,
+                payload.mac,
             ),
         )
         conn.commit()
     return {"status": "registered", "device_id": payload.device_id}
 
 
+@app.get("/health")
+async def health() -> JSONResponse:
+    return JSONResponse({"status": "ok"}, status_code=200)
+
+
 @app.get("/devices")
 async def list_devices() -> list[dict[str, object]]:
     with sqlite3.connect(DB_PATH) as conn:
         rows = conn.execute(
-            "SELECT device_id, device_type, role, ip_address, protocols, last_seen FROM devices"
+            "SELECT device_id, device_type, role, ip_address, protocols, last_seen, firmware, mac FROM devices"
         ).fetchall()
     return [
         {
@@ -89,6 +109,8 @@ async def list_devices() -> list[dict[str, object]]:
             "ip_address": row[3],
             "protocols": json.loads(row[4]) if row[4] else [],
             "last_seen": row[5],
+            "firmware": row[6],
+            "mac": row[7],
         }
         for row in rows
     ]
@@ -98,7 +120,7 @@ async def list_devices() -> list[dict[str, object]]:
 async def get_device(device_id: str) -> dict[str, object]:
     with sqlite3.connect(DB_PATH) as conn:
         row = conn.execute(
-            "SELECT device_id, device_type, role, ip_address, protocols, last_seen FROM devices WHERE device_id=?",
+            "SELECT device_id, device_type, role, ip_address, protocols, last_seen, firmware, mac FROM devices WHERE device_id=?",
             (device_id,)
         ).fetchone()
     if row is None:
@@ -110,6 +132,8 @@ async def get_device(device_id: str) -> dict[str, object]:
         "ip_address": row[3],
         "protocols": json.loads(row[4]) if row[4] else [],
         "last_seen": row[5],
+        "firmware": row[6],
+        "mac": row[7],
     }
 
 
