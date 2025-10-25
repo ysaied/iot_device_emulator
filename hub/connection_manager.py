@@ -8,6 +8,16 @@ import sqlite3
 import time
 from pathlib import Path
 
+from pysnmp.hlapi import (
+    CommunityData,
+    ContextData,
+    ObjectIdentity,
+    ObjectType,
+    SnmpEngine,
+    UdpTransportTarget,
+    getCmd,
+)
+
 DB_PATH = Path(os.environ.get("REGISTRY_DB_PATH", "/data/hub_registry.db"))
 POLL_INTERVAL = int(os.environ.get("HUB_POLL_INTERVAL", "20"))
 
@@ -43,22 +53,57 @@ def fetch_devices() -> list[dict[str, object]]:
     return devices
 
 
-def probe(host: str, port: int, protocol: str) -> None:
+def log_event(event: str, **fields: str) -> None:
+    print(json.dumps({"event": event, **fields}), flush=True)
+
+
+def probe_tcp(host: str, port: int, protocol: str) -> None:
     try:
         with socket.create_connection((host, port), timeout=3):
-            print(
-                json.dumps(
-                    {"event": "hub_probe_success", "protocol": protocol, "host": host, "port": port}
-                ),
-                flush=True,
-            )
+            log_event("hub_probe_success", protocol=protocol, host=host, port=port)
     except Exception as exc:  # noqa: BLE001
-        print(
-            json.dumps(
-                {"event": "hub_probe_failed", "protocol": protocol, "host": host, "port": port, "error": str(exc)}
-            ),
-            flush=True,
+        log_event("hub_probe_failed", protocol=protocol, host=host, port=port, error=str(exc))
+
+
+def probe_snmp(host: str, port: int) -> None:
+    try:
+        iterator = getCmd(
+            SnmpEngine(),
+            CommunityData("public", mpModel=1),
+            UdpTransportTarget((host, port), timeout=2, retries=0),
+            ContextData(),
+            ObjectType(ObjectIdentity("1.3.6.1.2.1.1.1.0")),
         )
+        error_indication, error_status, _, var_binds = next(iterator)
+        if error_indication:
+            log_event(
+                "hub_probe_failed",
+                protocol="SNMP",
+                host=host,
+                port=port,
+                error=str(error_indication),
+            )
+            return
+        if error_status:
+            log_event(
+                "hub_probe_failed",
+                protocol="SNMP",
+                host=host,
+                port=port,
+                error=str(error_status.prettyPrint()),
+            )
+            return
+        value = " = ".join([x.prettyPrint() for x in var_binds[0]]) if var_binds else "ok"
+        log_event("hub_probe_success", protocol="SNMP", host=host, port=port, value=value)
+    except Exception as exc:  # noqa: BLE001
+        log_event("hub_probe_failed", protocol="SNMP", host=host, port=port, error=str(exc))
+
+
+def probe(host: str, port: int, protocol: str) -> None:
+    if protocol == "SNMP":
+        probe_snmp(host, port)
+    else:
+        probe_tcp(host, port, protocol)
 
 
 def main() -> None:

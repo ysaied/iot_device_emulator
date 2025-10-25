@@ -4,7 +4,7 @@ paho-mqtt==1.6.1
 pymodbus==3.6.4
 pynetdicom==2.1.1
 requests==2.31.0
-pysnmp==4.4.12
+pysnmp-lextudio==5.0.26
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pydicom==2.4.4
